@@ -32,7 +32,7 @@ const GameStart: React.FC<GameStartProps> = ({ onStartToggle }) => {
           connectToggle={handleConnect}
           newGameToggle={handleNewGame}
           start={onStartToggle}
-          status="disconnected" />
+          status="connected" />
       </div>
     </div>
   )
@@ -48,6 +48,7 @@ const TitleScreen: FunctionComponent<Connection> = props => {
           setCounter(counter - 1);
         } else {
           clearTimeout(intervalId);
+          // Active game component
           props.start();
         }
       }, 1500);
@@ -56,35 +57,35 @@ const TitleScreen: FunctionComponent<Connection> = props => {
       }
     }
   }, [counter])
-
-  if (status === "disconnected") {
-    return (
-      <div className="text-center">
-        <h1>PONG GAME</h1>
-        <form>
-          <input type="text" placeholder="Type the code of the session" />
-          <br />
-          <button onClick={props.connectToggle}>Connect</button>
-          <p>or</p>
-          <button onClick={props.newGameToggle}>Create new game</button>
-        </form>
-      </div>
-    )
-  } else if (status === "connecting") {
-    return (
-      <>
-        <p>Connecting ...</p>
-      </>
-    )
+  switch (status) {
+    case "connecting":
+      return (
+        <>
+          <p>Connecting ...</p>
+        </>
+      )
+    case "connected":
+      return (
+        <>
+          <p>Starting in </p>
+          <span>{counter}</span>
+          <p>Connection Succesfully</p>
+        </>
+      )
+    default:
+      return (
+        <div className="text-center">
+          <h1>PONG GAME</h1>
+          <form>
+            <input type="text" placeholder="Type the code of the session" />
+            <br />
+            <button onClick={props.connectToggle}>Connect</button>
+            <p>or</p>
+            <button onClick={props.newGameToggle}>Create new game</button>
+          </form>
+        </div>
+      )
   }
-  return (
-    <>
-      <p>Starting in </p>
-      <span>{counter}</span>
-      <p>Connection Succesfully</p>
-    </>
-  )
-
 }
 
 export default GameStart;
