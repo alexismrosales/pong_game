@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useLayoutEffect } from "react"
-
-import styles from "./styles.module.css"
+import { useState } from "react"
+import Canvas from "./canvas"
+import { MovePlayer } from "./movement"
 
 interface GameProps {
   onStartToggle: () => void
@@ -9,27 +9,27 @@ interface GameProps {
 interface PlayerMovement {
   up: () => void
   down: () => void
-}
+  notTopLimit: boolean
+  notBottomLimit: boolean
 
-interface CanvasProps {
-  ballPos?: [number, number]
-  player: number
-  player1Pos?: number
-  player2Pos?: number
 }
 
 const Game: React.FC<GameProps> = ({ onStartToggle }) => {
-  const [playerPos, setPlayerPos] = useState(0);
+  const [playerPos, setPlayerPos] = useState(10);
+  const [bottom, setBottom] = useState(false);
+  const [top, setTop] = useState(false);
   const goUp = () => setPlayerPos(playerPos - 10);
   const goDown = () => setPlayerPos(playerPos + 10);
-  const playerMovement: PlayerMovement = { up: goUp, down: goDown }
+  const isBottom = (val: boolean) => setBottom(val);
+  const isTop = (val: boolean) => setTop(val);
+  const playerMovement: PlayerMovement = { up: goUp, down: goDown, notTopLimit: top, notBottomLimit: bottom }
   MovePlayer(playerMovement);
   return (
     <div id="Game">
-      <div className="flex justify-center">
-        <Canvas player={playerPos} />
+      <div className="flex justify-center z-0">
+        <Canvas playerPos={playerPos} isNotBottom={isBottom} isNotTop={isTop} />
       </div>
-      <div>
+      <div className="absolute inset-0 flex justify-center items-start z-10">
         <button
           className="text-white text-3xl"
           typeof="button"
@@ -37,68 +37,5 @@ const Game: React.FC<GameProps> = ({ onStartToggle }) => {
       </div>
     </div>
   )
-}
-
-const MovePlayer: React.FC<PlayerMovement> = props => {
-  const handleKeyPress = (event: KeyboardEvent) => {
-    if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") {
-      props.up();
-    } else if (event.key === "s" || event.key === "S" || event.key === "ArrowDown") {
-      props.down();
-    }
-  }
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyPress);
-    return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [handleKeyPress])
-  return null;
-}
-
-const Canvas: React.FC<CanvasProps> = props => {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const [frames, setFrames] = useState(0);
-  const paddle = `<svg id="eXyWj6YCs301" 
-  xmlns="http://www.w3.org/2000/svg" 
-  viewBox="0 0 100 600" 
-  shape-rendering="geometricPrecision" 
-  text-rendering="geometricPrecision">
-     <rect width="100" height="600" rx="0" ry="0" fill="#fff" stroke-width="0"/>
-  </svg>`;
-  const playerPaddle = new Image();
-  const paddleSrc = `data:image/svg+xml,${encodeURIComponent(paddle)}`
-  playerPaddle.src = paddleSrc;
-
-  const drawGame = () => {
-    if (canvasRef.current) {
-      const context = canvasRef.current.getContext("2d");
-      if (context) {
-        context.fillStyle = '#00000';
-        context.fillRect(0, 0, context.canvas.width, context.canvas.height);
-        playerPaddle.onload = () => {
-          //Player1
-          context.drawImage(playerPaddle, 10, props.player, 2, 15);
-          context.drawImage(playerPaddle, 80, 30, 2, 15);
-        }
-      }
-    }
-  }
-  useLayoutEffect(() => {
-    let timerId: any;
-    const animate = () => {
-      setFrames(frames + 1)
-      timerId = requestAnimationFrame(animate)
-    }
-    timerId = requestAnimationFrame(animate)
-    return () => cancelAnimationFrame(timerId)
-  })
-
-  useEffect(() => {
-    drawGame();
-  }, [frames]);
-
-  return <canvas
-    id="canvas"
-    ref={canvasRef}
-    className={styles.canvas} />
 }
 export default Game;
