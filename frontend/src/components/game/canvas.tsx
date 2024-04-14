@@ -1,12 +1,8 @@
 import { useState, useEffect, useRef, useLayoutEffect } from "react";
+import { CanvasProps } from "../interfaces";
 import styles from './styles.module.css'
-interface CanvasProps {
-  ballPos?: [number, number]
-  playerPos: number
-  isNotTop: (val: boolean) => void
-  isNotBottom: (val: boolean) => void
-}
-const Canvas: React.FC<CanvasProps> = ({ playerPos, isNotTop, isNotBottom }) => {
+
+const Canvas: React.FC<CanvasProps> = ({ playerPos, widthRef, heightRef }) => {
   const canvasRef = useRef<HTMLCanvasElement | null>(null)
   const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
   const [height, setHeight] = useState<number>(0);
@@ -19,7 +15,8 @@ const Canvas: React.FC<CanvasProps> = ({ playerPos, isNotTop, isNotBottom }) => 
   const divisionDraw = new Image();
   const divisionSrc = `data:image/svg+xml,${encodeURIComponent(Division())}`
 
-  const player = Math.max(0, Math.min(height - 17, playerPos));
+  // Setting limit height for player
+  const player = Math.max(0, Math.min(height - 22, playerPos));
   // Loading images previously
   paddle.src = paddleSrc;
   divisionDraw.src = divisionSrc;
@@ -35,11 +32,12 @@ const Canvas: React.FC<CanvasProps> = ({ playerPos, isNotTop, isNotBottom }) => 
       context.beginPath();
 
       //Player 1
-      context.drawImage(paddle, 10, player, 2, 17);
+      context.drawImage(paddle, 10, player, 2, 20);
 
       //Player 2
       context.beginPath();
-      context.drawImage(paddle, width - 10, 30, 2, 17);
+      context.drawImage(paddle, width - 10, 30, 2, 20);
+
       context.fill()
 
     }
@@ -60,6 +58,7 @@ const Canvas: React.FC<CanvasProps> = ({ playerPos, isNotTop, isNotBottom }) => 
   useLayoutEffect(() => {
     let timerId: number;
     const animate = () => {
+      console.log(player)
       setFrames(frames + 1)
       drawGame();
       timerId = requestAnimationFrame(animate)
@@ -69,12 +68,11 @@ const Canvas: React.FC<CanvasProps> = ({ playerPos, isNotTop, isNotBottom }) => 
   }, [drawGame, context]);
 
   useEffect(() => {
-    if (player === height - 17) {
-      isNotTop(false);
-    } else if (player === 0) {
-      isNotBottom(false);
+    if (width && height != 0) {
+      widthRef(width);
+      heightRef(height);
     }
-  }, [player, isNotTop, isNotBottom])
+  }, [width, height]);
 
   return <canvas
     id="canvas"

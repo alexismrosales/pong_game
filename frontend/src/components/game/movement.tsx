@@ -1,13 +1,7 @@
 import { useEffect } from "react";
+import { PlayerMovement } from "../interfaces";
 
-interface PlayerMovement {
-  up: () => void
-  down: () => void
-  notTopLimit: boolean
-  notBottomLimit: boolean
-}
-
-export const MovePlayer: React.FC<PlayerMovement> = ({ up, down, notTopLimit, notBottomLimit }) => {
+export const MovePlayer: React.FC<PlayerMovement> = ({ up, down }) => {
   const handleKeyPress = (event: KeyboardEvent) => {
     if (event.key === "w" || event.key === "W" || event.key === "ArrowUp") {
       up();
@@ -15,6 +9,7 @@ export const MovePlayer: React.FC<PlayerMovement> = ({ up, down, notTopLimit, no
       down();
     }
   }
+
   useEffect(() => {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);

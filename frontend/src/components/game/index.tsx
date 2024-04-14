@@ -1,33 +1,35 @@
 import { useState } from "react"
+import { GameProps, PlayerMovement } from "../interfaces";
 import Canvas from "./canvas"
 import { MovePlayer } from "./movement"
 
-interface GameProps {
-  onStartToggle: () => void
-}
 
-interface PlayerMovement {
-  up: () => void
-  down: () => void
-  notTopLimit: boolean
-  notBottomLimit: boolean
-
-}
 
 const Game: React.FC<GameProps> = ({ onStartToggle }) => {
   const [playerPos, setPlayerPos] = useState(10);
-  const [bottom, setBottom] = useState(false);
-  const [top, setTop] = useState(false);
-  const goUp = () => setPlayerPos(playerPos - 10);
-  const goDown = () => setPlayerPos(playerPos + 10);
-  const isBottom = (val: boolean) => setBottom(val);
-  const isTop = (val: boolean) => setTop(val);
-  const playerMovement: PlayerMovement = { up: goUp, down: goDown, notTopLimit: top, notBottomLimit: bottom }
+  const [width, setWidth] = useState(0);
+  const [height, setHeight] = useState(0);
+  const goUp = () => {
+    if (playerPos > 0) {
+      setPlayerPos(playerPos - 10)
+    }
+  };
+  const goDown = () => {
+    if (height != 0) {
+      if (playerPos < height - 20) {
+        setPlayerPos(playerPos + 10);
+      }
+    }
+  }
+  const updateWidth = (w: number) => setWidth(w);
+  const updateHeight = (h: number) => setHeight(h);
+  const playerMovement:
+    PlayerMovement = { up: goUp, down: goDown }
   MovePlayer(playerMovement);
   return (
     <div id="Game">
       <div className="flex justify-center z-0">
-        <Canvas playerPos={playerPos} isNotBottom={isBottom} isNotTop={isTop} />
+        <Canvas playerPos={playerPos} widthRef={updateWidth} heightRef={updateHeight} />
       </div>
       <div className="absolute inset-0 flex justify-center items-start z-10">
         <button
@@ -37,5 +39,5 @@ const Game: React.FC<GameProps> = ({ onStartToggle }) => {
       </div>
     </div>
   )
-}
+};
 export default Game;
