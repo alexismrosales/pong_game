@@ -1,19 +1,9 @@
 
 import { FunctionComponent, useEffect, useState } from "react"
+import { GameStartProps, Connection } from "../interfaces";
 
 
 import style from "./styles.module.css"
-
-interface GameStartProps {
-  onStartToggle: () => void
-}
-
-interface Connection {
-  connectToggle: () => void
-  newGameToggle: () => void
-  start: () => void
-  status: "disconnected" | "connecting" | "connected"
-}
 
 const GameStart: React.FC<GameStartProps> = ({ onStartToggle }) => {
   const [connect, setConnect] = useState(false);
