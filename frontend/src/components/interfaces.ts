@@ -21,7 +21,7 @@ export interface PlayerMovement {
 };
 
 export interface CanvasProps {
-  ballPos?: [number, number]
+  ballPos: { x: number, y: number }
   playerPos: number
   widthRef: (w: number) => void
   heightRef: (h: number) => void

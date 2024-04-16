@@ -1,35 +1,51 @@
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { GameProps, PlayerMovement } from "../interfaces";
 import Canvas from "./canvas"
 import { MovePlayer } from "./movement"
-
+import { isOnPaddle } from "./status";
 
 
 const Game: React.FC<GameProps> = ({ onStartToggle }) => {
-  const [playerPos, setPlayerPos] = useState(10);
-  const [width, setWidth] = useState(0);
-  const [height, setHeight] = useState(0);
+  const [playerPos, setPlayerPos] = useState<number>(10);
+  const [ballPos, setBallPos] = useState<{ x: number, y: number }>({ x: 0, y: 0 });
+  const [width, setWidth] = useState<number>(0);
+  const [height, setHeight] = useState<number>(0);
+  const [paddleHeight, setPaddleHeight] = useState<number>(0);
+  const [isColission, setIsCollision] = useState<boolean>(true);
   const goUp = () => {
-    if (playerPos > 0) {
-      setPlayerPos(playerPos - 10)
+    if (playerPos > 10) {
+      setPlayerPos(playerPos - 25)
     }
   };
   const goDown = () => {
-    if (height != 0) {
-      if (playerPos < height - 20) {
-        setPlayerPos(playerPos + 10);
+    if (height !== 0) {
+      if (playerPos < height - height / 8 - 10) {
+        setPlayerPos(playerPos + 25);
       }
     }
-  }
+  };
   const updateWidth = (w: number) => setWidth(w);
   const updateHeight = (h: number) => setHeight(h);
-  const playerMovement:
-    PlayerMovement = { up: goUp, down: goDown }
+  const playerMovement: PlayerMovement = { up: goUp, down: goDown }
   MovePlayer(playerMovement);
+
+  useEffect(() => {
+    if (width !== 0 && height !== 0) {
+      setPaddleHeight(height / 8);
+    }
+  }, [paddleHeight]);
+  // Game states
+  useEffect(() => {
+    const status = isOnPaddle(playerPos, ballPos, paddleHeight);
+    if (status != null) {
+      setIsCollision(status);
+    }
+  }, [isColission]);
+
   return (
-    <div id="Game">
-      <div className="flex justify-center z-0">
-        <Canvas playerPos={playerPos} widthRef={updateWidth} heightRef={updateHeight} />
+    <div id="Game" className="h-screen justify-center">
+      <div className="z-0">
+        <Canvas playerPos={playerPos} ballPos={{ x: 30, y: 30 }} widthRef={updateWidth} heightRef={updateHeight} />
       </div>
       <div className="absolute inset-0 flex justify-center items-start z-10">
         <button
