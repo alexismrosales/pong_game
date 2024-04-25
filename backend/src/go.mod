@@ -1,4 +1,4 @@
-module pong-websocket
+module src
 
 go 1.22.2
 
