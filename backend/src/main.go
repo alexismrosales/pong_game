@@ -1,11 +1,12 @@
 package main
 
 import (
-	"fmt"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/http"
+	sts "src/status"
 	"sync"
+	"time"
 )
 
 // The server will be assigning to every connection with the code of the game where the player is  in
@@ -33,6 +34,7 @@ func NewSession() *Sessions {
 	}
 }
 
+// Parameters of URL will be read and listener will start
 func (s *Server) handleConnectionWebsocket(w http.ResponseWriter, r *http.Request) {
 	// Getting header info from URL
 	code := r.URL.Query().Get("code") // ws://localhost:8080/ws?code=code&player=player
@@ -53,58 +55,83 @@ func (s *Server) handleConnectionWebsocket(w http.ResponseWriter, r *http.Reques
 		log.Panic("Error creating websocket connection:", err)
 	} else {
 		log.Println("New connection avalaible from: ", conn.RemoteAddr().String(),
-			"\nCode: ", code, "\n URL Info:", r.URL.String())
+			"\nCode: ", code, "\nURL Info:", r.URL.String())
 	}
 
-	// mutex
 	s.mu.Lock()
 	s.conns[conn] = code
 	s.mu.Unlock()
 	// Adding every new connection to their corresponded session
 	addSessionData(s, conn, code)
-
 }
 
+// Player will be added to a new session, if there is no a new one will be created and the first
+// player will be player 1 else player 2 will added to the session
 func addSessionData(s *Server, conn *websocket.Conn, code string) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	var player int
-	// Creating a new session if it not exists and assign player
-	if _, exists := s.sessions.sessions[code]; !exists {
-		session := make(map[int]*websocket.Conn)
+	if session, exists := s.sessions.sessions[code]; !exists {
+		// Creating new session and adding player 1 to session
 		player = 1
+		session = make(map[int]*websocket.Conn)
 		session[player] = conn
+		s.mu.Lock()
 		s.sessions.sessions[code] = session
+		s.mu.Unlock()
+
+		msg, _ := sts.MsgStatus(10)
+		log.Println("Status 10:", msg)
+	} else if len(session) == 2 {
+		msg, _ := sts.MsgStatus(31)
+		log.Panic("ERR: Status 31:", msg)
+
+		conn.Close()
 	} else {
-		session := s.sessions.sessions[code]
-		if len(session) == 2 {
-			// Needs to bradcast message to the player who is trying to log with a session with two player
-			log.Panic("Sessions Full")
-			conn.Close()
-		} else {
-			// Adding new player to session
-			player = 2
-			session[player] = conn
-			s.sessions.sessions[code] = session
-		}
+		// Adding new player to session
+		player = 2
+		session[player] = conn
+		s.mu.Lock()
+		s.sessions.sessions[code] = session
+		s.mu.Unlock()
+
+		msg, _ := sts.MsgStatus(20)
+		log.Println("Status 20: ", msg)
+
+		// Creating a new session
+		go s.sessionListener(session[1], session[2], code)
 	}
-	fmt.Println("Player", player, "joined succesfully ...")
 }
 
-func (s *Server) sessionListener(conn *websocket.Conn, code string) {
+// Concurrent function that will manage every game session avalaible, and will comunicate with both players
+func (s *Server) sessionListener(p1Conn, p2Conn *websocket.Conn, code string) {
+	wasDisplayed := false
 	for {
-		if session, exists := s.sessions.sessions[code]; exists {
+		s.mu.Lock()
+		session, exists := s.sessions.sessions[code]
+		s.mu.Unlock()
+
+		if exists {
 			// In case the session has two player, the broadcast for every player will start
-			if len(session) == 2 {
-				fmt.Println("starting game")
+			if !wasDisplayed && len(session) == 2 {
+				time.Sleep(time.Millisecond * 5000)
+				s.writeStatusToConn(p1Conn, 30)
+				s.writeStatusToConn(p2Conn, 30)
+				wasDisplayed = true
 			}
 		}
 	}
 }
 
+// Writing a message to the desired connection
 func (s *Server) writeStatusToConn(conn *websocket.Conn, status int) {
-	// Some status to write fast responses to
+	_, nStatus := sts.MsgStatus(status)
+	data := map[string]interface{}{
+		"statusCode": nStatus,
+	}
+
+	// Sending message to the selected connection
+	conn.WriteJSON(data)
 }
+
 func main() {
 	server := NewServer()
 	http.HandleFunc("/ws", server.handleConnectionWebsocket)
