@@ -15,6 +15,11 @@ const GameStart: React.FC<GameStartProps> = ({ onStartToggle }) => {
     setNewGame(!newGame);
   }
 
+  useEffect = () => {
+    if (newGame) {
+
+    }
+  }
   return (
     <div id="GameStart" className={style.container}>
       <div className="flex flex-col">
@@ -22,7 +27,7 @@ const GameStart: React.FC<GameStartProps> = ({ onStartToggle }) => {
           connectToggle={handleConnect}
           newGameToggle={handleNewGame}
           start={onStartToggle}
-          status="connected" />
+          status="disconnected" />
       </div>
     </div>
   )
@@ -62,12 +67,12 @@ const TitleScreen: FunctionComponent<Connection> = props => {
           <p>Connection Succesfully</p>
         </>
       )
-    default:
+    case "disconnected":
       return (
         <div className="text-center">
           <h1>PONG GAME</h1>
           <form>
-            <input type="text" placeholder="Type the code of the session" />
+            <input className="text-black" type="text" placeholder="Type the code of the session" />
             <br />
             <button onClick={props.connectToggle}>Connect</button>
             <p>or</p>

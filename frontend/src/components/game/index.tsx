@@ -36,9 +36,13 @@ const Game: React.FC<GameProps> = ({ onStartToggle }) => {
   }, [paddleHeight]);
   // Game states
   useEffect(() => {
-    const status = isOnPaddle(playerPos, ballPos, paddleHeight);
+    const { status, pos } = isOnPaddle(playerPos, ballPos, paddleHeight);
     if (status != null) {
       setIsCollision(status);
+    }
+    // If the player lost a point
+    if (!status && playerPos == 30) {
+      console.log("Point for opposite player")
     }
   }, [isColission]);
 
