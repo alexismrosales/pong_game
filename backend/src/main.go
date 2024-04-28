@@ -116,6 +116,7 @@ func (s *Server) sessionListener(p1Conn, p2Conn *websocket.Conn, code string) {
 				s.writeStatusToConn(p1Conn, 30)
 				s.writeStatusToConn(p2Conn, 30)
 				wasDisplayed = true
+				// Starting game
 			}
 		}
 	}
